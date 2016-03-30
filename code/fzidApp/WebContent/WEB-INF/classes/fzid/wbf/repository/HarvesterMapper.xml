@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fzid.wbf.repository.HarvesterMapper">
+<resultMap type="HarvesterInfo" id="harvesterRM">
+  <result column="id" property="harvesterId" javaType="String" jdbcType="INTEGER"/>
+  <result column="charvesterName" property="harvesterName" javaType="String" jdbcType="VARCHAR"/>
+  <result column="charvesterSIM" property="harvesterSIM" javaType="String" jdbcType="VARCHAR"/>
+  <result column="charvesterCode" property="harvesterCode" javaType="String" jdbcType="VARCHAR"/>
+  <result column="nsysDeptID" property="orgId" javaType="Int" jdbcType="INTEGER"/>
+  <result column="csysDeptName" property="orgName" javaType="String" jdbcType="VARCHAR"/>
+</resultMap>
+<select id="find" resultMap="harvesterRM">
+SELECT hvr.nharvesterID,hvr.charvesterName,hvr.charvesterSIM,hvr.charvesterCode,dept.nsysDeptID,dept.csysDeptName 
+	FROM tharvesterinfo hvr,
+		tsys_dept dept 
+	WHERE hvr.nharvesterDeptID=dept.nsysDeptID 
+</select>
+</mapper>

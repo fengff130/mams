@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<!-- Make this available across all of Spring MVC -->
+    <!-- Configures the @Controller programming model -->
+	<mvc:annotation-driven validator="validator" /> 
+    <!-- 扫描包 -->
+	<context:component-scan base-package="fzid.wbf">
+        <context:exclude-filter type="annotation"
+                                expression="org.springframework.stereotype.Service"/>
+    </context:component-scan>
+   <context:component-scan base-package="fzid.wbf.service"/>
+   <context:component-scan base-package="fzid.wbf.repository"/>
+    <context:property-placeholder location="classpath:db.properties"/>
+    <bean id="druidDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">   
+	    <!-- 基本属性 url、user、password -->  
+	    <property name="username" value="${jdbc.user}" />
+	    <property name="password" value="${jdbc.password}" />
+	    <property name="driverClassName" value="${jdbc.driverClass}" />
+	    <property name="url" value="${jdbc.jdbcUrl}" />
+	    <!-- 配置初始化大小、最小、最大 -->  
+	    <property name="initialSize" value="1" />  
+	    <property name="minIdle" value="1" />   
+	    <property name="maxActive" value="20" />  
+	    <!-- 配置获取连接等待超时的时间 -->  
+	    <property name="maxWait" value="60000" />  
+	    <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->  
+	    <property name="timeBetweenEvictionRunsMillis" value="60000" />  
+	    <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->  
+	    <property name="minEvictableIdleTimeMillis" value="300000" />  
+	    <property name="validationQuery" value="SELECT 'x'" />  
+	    <property name="testWhileIdle" value="true" />  
+	    <property name="testOnBorrow" value="false" />  
+	    <property name="testOnReturn" value="false" />  
+	    <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->  
+	    <property name="poolPreparedStatements" value="true" />  
+	    <property name="maxPoolPreparedStatementPerConnectionSize" value="20" />  
+	    <!-- 配置监控统计拦截的filters，去掉后监控界面sql无法统计 -->  
+	    <property name="filters" value="stat" />   
+  	</bean>
+  	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	    <property name="dataSource" ref="druidDataSource"/>
+	    <property name="mapperLocations" value="classpath:fzid/wbf/repository/*Mapper.xml"/>
+	    <property name="typeAliasesPackage" value="fzid.wbf.pojo"/>
+	</bean>
+	<!--** ============================================================================================= **-->
+	<!--** 配置mybatis的MapperScannerConfigurer，它将会查找类路径下的 映射器并自动将它们创建成MapperFactoryBeans      **-->
+	<!--** basePackage属性是映射器文件的基本包路径，可以使用逗号或者分好设置多个包路径.                                  **-->
+	<!--** ============================================================================================= **-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	  <property name="basePackage" value="fzid.wbf.repository"/>
+	</bean>
+	<!--** ============================================================================================== **-->
+	<!--** 配置mybatis的事务管理器。声明 DataSourceTransactionManager组件，并传入datasource.                       **-->
+	<!--** ============================================================================================== **-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	  <property name="dataSource" ref="druidDataSource"/>
+	</bean>
+    <!--  <mvc:view-controller path="/WEB-RES/pages/index.html" view-name="index"/>-->
+    
+    <mvc:resources mapping="/WEB-RES/css/**" location="/WEB-RES/css/"/>
+    <mvc:resources mapping="/WEB-RES/pages/**" location="/WEB-RES/pages/"/>
+    <mvc:resources mapping="/WEB-RES/js/**" location="/WEB-RES/js/"/>
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+	    <property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+	    <property name="validationMessageSource" ref="messageSource" />
+	  </bean>
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+	    <property name="basenames">
+	      <list>
+	        <value>classpath:message</value>
+	        <value>classpath:org/hibernate/validator/ValidationMessages</value>
+	      </list>
+	    </property>
+	    <property name="fallbackToSystemLocale" value="false"/>
+	    <property name="useCodeAsDefaultMessage" value="true"/>
+	    <property name="defaultEncoding" value="UTF-8"/>
+	    <property name="cacheSeconds" value="120"/>
+	</bean>
+    
+    <bean id="viewResolver"  class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+    	<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+        <property name="cache" value="false"/>
+        <property name="prefix" value="/WEB-RES/pages/"/>    
+        <property name="suffix" value=".jsp"/>    
+        
+    </bean>
+	<!-- 配置多文件上传的决策器，用于配合jquery file upload做文件上传使用。 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+	  <property name="defaultEncoding" value="UTF-8" />
+	  <property name="maxUploadSize" value="104857600"/>
+	  <property name="maxInMemorySize" value="4096"/>
+	  <property name="uploadTempDir" value="SYS-RES/upload"/>
+	</bean>
+ 
+</beans>
